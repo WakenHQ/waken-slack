@@ -1,0 +1,76 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "waken-slack"
+version = "0.1.0"
+description = "Slack Source/Output for Waken -- Socket Mode in, chat.postMessage out."
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "MIT" }
+authors = [{ name = "Waken contributors" }]
+keywords = ["ai", "agents", "slack", "waken"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Libraries",
+]
+dependencies = [
+    "waken>=0.1.1",
+    # `[optional]` pulls in aiohttp, which both the Socket Mode client
+    # (`slack_sdk.socket_mode.aiohttp.SocketModeClient`) and the async Web
+    # API client (`slack_sdk.web.async_client.AsyncWebClient`) need at
+    # runtime -- slack_sdk itself only lists aiohttp as an optional extra,
+    # not a hard dependency, since plenty of its users only need the sync
+    # client. `slack_bolt` is deliberately NOT a dependency: this package
+    # talks to `slack_sdk`'s Socket Mode client directly rather than going
+    # through `slack_bolt`'s `App`/`AsyncSocketModeHandler` machinery, which
+    # brings a full listener/middleware/dispatch framework this package has
+    # no use for (see README's "Design notes").
+    "slack_sdk[optional]>=3.27.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/WakenHQ/waken-slack"
+Repository = "https://github.com/WakenHQ/waken-slack"
+Issues = "https://github.com/WakenHQ/waken-slack/issues"
+Documentation = "https://github.com/WakenHQ/waken-slack/tree/main/README.md"
+
+[project.optional-dependencies]
+dev = [
+    "ruff>=0.6",
+    "mypy>=1.11",
+    "pytest>=8.3",
+    "pytest-asyncio>=0.24",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["waken_slack"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 88
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+packages = ["waken_slack"]
+
+# `waken` itself is written with full type hints (mypy --strict, same as
+# here) but doesn't ship a py.typed marker yet, so mypy treats it as
+# untyped. This only silences that packaging gap for waken's own imports --
+# waken_slack's own code stays fully strict-checked.
+[[tool.mypy.overrides]]
+module = "waken.*"
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
